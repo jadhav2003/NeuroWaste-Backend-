@@ -14,8 +14,11 @@ firebase_key = os.getenv("FIREBASE_SERVICE_ACCOUNT")
 firebase_url = os.getenv("FIREBASE_DB_URL")
 
 if firebase_key and firebase_url:
-    cred = credentials.Certificate(json.loads(firebase_key))
-    firebase_admin.initialize_app(cred, {'databaseURL': firebase_url})
+   cred = credentials.Certificate("serviceAccountKey.json")
+firebase_admin.initialize_app(cred, {
+    "databaseURL": os.getenv("FIREBASE_DB_URL")
+})
+
 else:
     # If env vars not present, it will still run but DB calls will fail until configured
     print("WARNING: FIREBASE_SERVICE_ACCOUNT or FIREBASE_DB_URL not set")
