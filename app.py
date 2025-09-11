@@ -2,12 +2,16 @@ import os
 from flask import Flask, request, jsonify
 import firebase_admin
 from firebase_admin import credentials, db
+import json
 
 app = Flask(__name__)
 
 # Load Firebase credentials from serviceAccountKey.json (must be in repo or env var)
 firebase_key = os.getenv("FIREBASE_SERVICE_ACCOUNT")
 firebase_url = os.getenv("FIREBASE_DB_URL")
+
+print("DEBUG: firebase_key loaded?", bool(firebase_key))
+print("DEBUG: firebase_url =", firebase_url)
 
 if firebase_key and firebase_url:
     try:
