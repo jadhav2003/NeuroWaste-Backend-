@@ -1,50 +1,35 @@
-import os
+import os, json
 from flask import Flask, request, jsonify
 import firebase_admin
 from firebase_admin import credentials, db
-import json
 
 app = Flask(__name__)
 
-# Load Firebase credentials from serviceAccountKey.json (must be in repo or env var)
+# -------------------- FIREBASE INIT --------------------
 firebase_key = os.getenv("FIREBASE_SERVICE_ACCOUNT")
 firebase_url = os.getenv("FIREBASE_DB_URL")
 
-print("DEBUG: firebase_key loaded?", bool(firebase_key))
-print("DEBUG: firebase_url =", firebase_url)
+if not firebase_key or not firebase_url:
+    raise RuntimeError("❌ FIREBASE_SERVICE_ACCOUNT or FIREBASE_DB_URL missing in .env")
 
-if firebase_key and firebase_url:
-    try:
-        # Parse the JSON string into a Python dict
-        # Fix escaped \n from .env
-        service_account_info = json.loads(firebase_key.replace('\\n', '\n'))
+try:
+    # Fix escaped \n issue
+    service_account_info = json.loads(firebase_key.replace('\\n', '\n'))
 
-        # Use dict for credentials
-        cred = credentials.Certificate(service_account_info)
+    cred = credentials.Certificate(service_account_info)
 
-        # Initialize Firebase app (only once)
-        if not firebase_admin._apps:
-            firebase_admin.initialize_app(cred, {
-                "databaseURL": firebase_url
-            })
-        print("✅ Firebase initialized successfully")
+    if not firebase_admin._apps:  # prevent duplicate init
+        firebase_admin.initialize_app(cred, {"databaseURL": firebase_url})
 
-        # Example write
-        ref = db.reference("/")
-        ref.set({"status": "connected"})
-        print("🔥 Data written successfully")
+    print("✅ Firebase initialized successfully")
 
-    except Exception as e:
-        print(f"⚠️ Firebase initialization failed: {e}")
-else:
-    print("⚠️ FIREBASE_SERVICE_ACCOUNT or FIREBASE_DB_URL not set")
+except Exception as e:
+    raise RuntimeError(f"❌ Firebase initialization failed: {e}")
 
 # -------------------- ROUTES --------------------
-
 @app.route("/")
 def home():
     return jsonify({"message": "NeuroWaste API is running 🚀"})
-
 
 @app.route("/update", methods=["POST"])
 def update_bin():
@@ -65,7 +50,6 @@ def update_bin():
     except Exception as e:
         return jsonify({"error": f"Failed to update Firebase: {e}"}), 500
 
-
 @app.route("/bins", methods=["GET"])
 def get_bins():
     try:
@@ -74,7 +58,6 @@ def get_bins():
         return jsonify(bins if bins else {})
     except Exception as e:
         return jsonify({"error": f"Failed to fetch bins: {e}"}), 500
-
 
 # -------------------- ENTRYPOINT --------------------
 if __name__ == "__main__":
