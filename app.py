@@ -16,7 +16,8 @@ print("DEBUG: firebase_url =", firebase_url)
 if firebase_key and firebase_url:
     try:
         # Parse the JSON string into a Python dict
-        service_account_info = json.loads(firebase_key)
+        # Fix escaped \n from .env
+        service_account_info = json.loads(firebase_key.replace('\\n', '\n'))
 
         # Use dict for credentials
         cred = credentials.Certificate(service_account_info)
