@@ -1,35 +1,38 @@
-import os, json
+import os
 from flask import Flask, request, jsonify
 import firebase_admin
 from firebase_admin import credentials, db
 
 app = Flask(__name__)
 
-# -------------------- FIREBASE INIT --------------------
-firebase_key = os.getenv("FIREBASE_SERVICE_ACCOUNT")
-firebase_url = os.getenv("FIREBASE_DB_URL")
-
-if not firebase_key or not firebase_url:
-    raise RuntimeError("❌ FIREBASE_SERVICE_ACCOUNT or FIREBASE_DB_URL missing in .env")
+# -------------------- FIREBASE INITIALIZATION --------------------
+# Path to your JSON service account file
+SERVICE_ACCOUNT_PATH = "serviceAccountKey.json"
+DATABASE_URL = "https://neurowaste-625d1-default-rtdb.asia-southeast1.firebasedatabase.app"
 
 try:
-    # Fix escaped \n issue
-    service_account_info = json.loads(firebase_key.replace('\\n', '\n'))
+    # Load credentials
+    cred = credentials.Certificate(SERVICE_ACCOUNT_PATH)
 
-    cred = credentials.Certificate(service_account_info)
-
-    if not firebase_admin._apps:  # prevent duplicate init
-        firebase_admin.initialize_app(cred, {"databaseURL": firebase_url})
-
+    # Initialize Firebase app only once
+    if not firebase_admin._apps:
+        firebase_admin.initialize_app(cred, {"databaseURL": DATABASE_URL})
     print("✅ Firebase initialized successfully")
 
+    # Test write
+    ref = db.reference("/")
+    ref.set({"status": "connected"})
+    print("🔥 Test data written successfully")
+
 except Exception as e:
-    raise RuntimeError(f"❌ Firebase initialization failed: {e}")
+    print(f"❌ Firebase initialization failed: {e}")
 
 # -------------------- ROUTES --------------------
+
 @app.route("/")
 def home():
     return jsonify({"message": "NeuroWaste API is running 🚀"})
+
 
 @app.route("/update", methods=["POST"])
 def update_bin():
@@ -50,6 +53,7 @@ def update_bin():
     except Exception as e:
         return jsonify({"error": f"Failed to update Firebase: {e}"}), 500
 
+
 @app.route("/bins", methods=["GET"])
 def get_bins():
     try:
@@ -59,6 +63,8 @@ def get_bins():
     except Exception as e:
         return jsonify({"error": f"Failed to fetch bins: {e}"}), 500
 
+
 # -------------------- ENTRYPOINT --------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
