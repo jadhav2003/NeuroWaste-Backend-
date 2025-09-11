@@ -12,7 +12,7 @@ firebase_url = os.getenv("FIREBASE_DB_URL")
 if firebase_key_json and firebase_url:
     try:
         # Parse the JSON string into a Python dict
-        service_account_info = json.loads(firebase_key_json)
+        service_account_info = json.loads(firebase_key)
 
         # Use dict for credentials
         cred = credentials.Certificate(service_account_info)
