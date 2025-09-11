@@ -9,20 +9,30 @@ app = Flask(__name__)
 firebase_key = os.getenv("FIREBASE_SERVICE_ACCOUNT")
 firebase_url = os.getenv("FIREBASE_DB_URL")
 
-if firebase_key and firebase_url:
+if firebase_key_json and firebase_url:
     try:
-        # Local service account file
-        cred = credentials.Certificate("serviceAccountKey.json")
-        firebase_admin.initialize_app(cred, {
-            "databaseURL": firebase_url
-        })
+        # Parse the JSON string into a Python dict
+        service_account_info = json.loads(firebase_key_json)
+
+        # Use dict for credentials
+        cred = credentials.Certificate(service_account_info)
+
+        # Initialize Firebase app (only once)
+        if not firebase_admin._apps:
+            firebase_admin.initialize_app(cred, {
+                "databaseURL": firebase_url
+            })
         print("✅ Firebase initialized successfully")
+
+        # Example write
+        ref = db.reference("/")
+        ref.set({"status": "connected"})
+        print("🔥 Data written successfully")
+
     except Exception as e:
         print(f"⚠️ Firebase initialization failed: {e}")
 else:
-    # Warn but don’t crash
-    print("⚠️ WARNING: FIREBASE_SERVICE_ACCOUNT or FIREBASE_DB_URL not set")
-
+    print("⚠️ FIREBASE_SERVICE_ACCOUNT or FIREBASE_DB_URL not set")
 
 # -------------------- ROUTES --------------------
 
