@@ -9,7 +9,7 @@ app = Flask(__name__)
 firebase_key = os.getenv("FIREBASE_SERVICE_ACCOUNT")
 firebase_url = os.getenv("FIREBASE_DB_URL")
 
-if firebase_key_json and firebase_url:
+if firebase_key and firebase_url:
     try:
         # Parse the JSON string into a Python dict
         service_account_info = json.loads(firebase_key)
